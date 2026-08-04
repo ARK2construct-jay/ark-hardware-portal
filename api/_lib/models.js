@@ -21,6 +21,8 @@ const userSchema = new Schema(
     password: { type: String, required: true }, // bcrypt hash OR legacy plaintext
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
+    isAdmin: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false },
   },
   { timestamps: true, collection: 'userdetail' }
 );

@@ -1,4 +1,6 @@
 import jwt from 'jsonwebtoken';
+import { connectToDatabase } from './db.js';
+import { User } from './models.js';
 
 const COOKIE_NAME = 'ark_session';
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -85,4 +87,53 @@ export function requireAuth(req, res) {
     return null;
   }
   return session;
+}
+
+// Like requireAuth, but also loads the user fresh from the database and
+// rejects disabled accounts immediately — so revoking someone's access takes
+// effect on their very next request, not just on their next login attempt
+// (JWT sessions are otherwise valid for 7 days regardless of DB state).
+// Returns the full user document (lean) on success, or writes an error
+// response and returns null.
+export async function requireActiveUser(req, res) {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: 'Not authenticated.' });
+    return null;
+  }
+
+  try {
+    await connectToDatabase();
+    const user = await User.findById(session.sub).lean();
+
+    if (!user) {
+      res.status(401).json({ error: 'Not authenticated.' });
+      return null;
+    }
+
+    if (user.disabled) {
+      res.status(403).json({ error: 'This account has been disabled. Contact your administrator.' });
+      return null;
+    }
+
+    return user;
+  } catch (err) {
+    console.error('requireActiveUser error:', err);
+    res.status(500).json({ error: 'Something went wrong while checking your account.' });
+    return null;
+  }
+}
+
+// Like requireActiveUser, but also requires admin privileges. Returns the
+// user document on success, or writes 401/403 and returns null.
+export async function requireAdmin(req, res) {
+  const user = await requireActiveUser(req, res);
+  if (!user) return null;
+
+  if (!user.isAdmin) {
+    res.status(403).json({ error: 'Admin access required.' });
+    return null;
+  }
+
+  return user;
 }

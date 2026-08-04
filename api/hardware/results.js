@@ -1,6 +1,6 @@
 import { connectToDatabase } from '../_lib/db.js';
 import { Hardware } from '../_lib/models.js';
-import { requireAuth } from '../_lib/auth.js';
+import { requireActiveUser } from '../_lib/auth.js';
 import { buildDimensionFilter } from '../_lib/hardwareQuery.js';
 
 const MAX_RESULTS = 500;
@@ -14,8 +14,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const session = requireAuth(req, res);
-  if (!session) return;
+  const user = await requireActiveUser(req, res);
+  if (!user) return;
 
   const { brand, hardwareType, location } = req.query || {};
 

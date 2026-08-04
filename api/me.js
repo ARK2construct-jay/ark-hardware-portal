@@ -1,4 +1,4 @@
-import { requireAuth } from './_lib/auth.js';
+import { requireActiveUser } from './_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,15 +6,16 @@ export default async function handler(req, res) {
     return;
   }
 
-  const session = requireAuth(req, res);
-  if (!session) return;
+  const user = await requireActiveUser(req, res);
+  if (!user) return;
 
   res.status(200).json({
     user: {
-      id: session.sub,
-      email: session.email,
-      username: session.username,
-      fullName: session.fullName,
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      fullName: user.fullName,
+      isAdmin: !!user.isAdmin,
     },
   });
 }

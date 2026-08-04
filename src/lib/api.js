@@ -30,4 +30,9 @@ export const api = {
   hardwareOptions: (dimension, filters = {}) =>
     request(`/hardware/options?${new URLSearchParams({ dimension, ...filters }).toString()}`),
   hardwareResults: (params) => request(`/hardware/results?${new URLSearchParams(params).toString()}`),
+  adminListUsers: () => request('/admin/users'),
+  adminUpdateUser: (userId, patch) =>
+    request('/admin/users', { method: 'PATCH', body: JSON.stringify({ userId, ...patch }) }),
+  adminDeleteUser: (userId) =>
+    request('/admin/users', { method: 'DELETE', body: JSON.stringify({ userId }) }),
 };

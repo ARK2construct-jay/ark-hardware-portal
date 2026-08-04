@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Navbar() {
@@ -37,6 +37,14 @@ export default function Navbar() {
           <div className="h-9 w-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-sm font-semibold">
             {initials}
           </div>
+          {user?.isAdmin && (
+            <Link
+              to="/admin"
+              className="text-sm font-medium text-ink-secondary hover:text-brand-600 border border-hairline hover:border-brand-500/40 rounded-lg px-3 py-1.5 transition"
+            >
+              Manage users
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             className="text-sm font-medium text-ink-secondary hover:text-critical border border-hairline hover:border-critical/40 rounded-lg px-3 py-1.5 transition"

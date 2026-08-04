@@ -35,6 +35,11 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (user.disabled) {
+      res.status(403).json({ error: 'This account has been disabled. Contact your administrator.' });
+      return;
+    }
+
     if (user.lockUntil && user.lockUntil > new Date()) {
       const minutesLeft = Math.ceil((user.lockUntil - new Date()) / 60000);
       res.status(423).json({
@@ -74,6 +79,7 @@ export default async function handler(req, res) {
         fullName: user.fullName,
         email: user.email,
         username: user.username,
+        isAdmin: !!user.isAdmin,
       },
     });
   } catch (err) {

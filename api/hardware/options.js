@@ -1,6 +1,6 @@
 import { connectToDatabase } from '../_lib/db.js';
 import { Hardware } from '../_lib/models.js';
-import { requireAuth } from '../_lib/auth.js';
+import { requireActiveUser } from '../_lib/auth.js';
 import { FIELD_GROUPS, buildDimensionFilter, isJunkValue } from '../_lib/hardwareQuery.js';
 
 // Powers each dropdown in the 3-step wizard (Brand -> Hardware Type ->
@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const session = requireAuth(req, res);
-  if (!session) return;
+  const user = await requireActiveUser(req, res);
+  if (!user) return;
 
   const { dimension, brand, hardwareType } = req.query || {};
 

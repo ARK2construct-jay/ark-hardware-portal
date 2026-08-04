@@ -16,6 +16,12 @@ export function mockApiPlugin() {
   const LOCATIONS = ['Amenity (Exterior)', 'Building Entry (Exterior)', 'Unit Entry - ADA (Interior)'];
   const DESCRIPTIONS = ['Hinge', 'Closer', 'Entry lock', 'Kickplate', 'Threshold', 'Weatherstrip'];
 
+  const FIXTURE_USERS = [
+    { id: '1', fullName: 'Jayesh Paliwal', email: 'arksimplif@gmail.com', username: 'jay', isAdmin: true, disabled: false, createdAt: new Date(2026, 0, 1).toISOString() },
+    { id: '2', fullName: 'Vishal Sharma', email: 'vishal@ark2construct.com', username: 'vishal', isAdmin: false, disabled: false, createdAt: new Date(2026, 0, 3).toISOString() },
+    { id: '3', fullName: 'Test Employee', email: 'test@ark2construct.com', username: 'testemp', isAdmin: false, disabled: true, createdAt: new Date(2026, 0, 5).toISOString() },
+  ];
+
   function fixtureResults(brand, hardwareType, location) {
     return DESCRIPTIONS.map((desc, i) => ({
       _id: `${brand}-${hardwareType}-${location}-${i}`,
@@ -42,7 +48,7 @@ export function mockApiPlugin() {
         if (!req.url.startsWith('/api/')) return next();
 
         let body = {};
-        if (req.method === 'POST') {
+        if (['POST', 'PATCH', 'DELETE', 'PUT'].includes(req.method)) {
           const chunks = [];
           for await (const chunk of req) chunks.push(chunk);
           try {
@@ -56,9 +62,7 @@ export function mockApiPlugin() {
 
         if (url.pathname === '/api/me') {
           if (loggedIn) {
-            return send(res, 200, {
-              user: { id: '1', fullName: 'Jayesh Paliwal', email: 'arksimplif@gmail.com', username: 'jay' },
-            });
+            return send(res, 200, { user: FIXTURE_USERS[0] });
           }
           return send(res, 401, { error: 'Not authenticated.' });
         }
@@ -66,8 +70,24 @@ export function mockApiPlugin() {
         if (url.pathname === '/api/login' || url.pathname === '/api/register') {
           loggedIn = true;
           return send(res, 200, {
-            user: { id: '1', fullName: body.fullName || 'Jayesh Paliwal', email: body.email || 'arksimplif@gmail.com', username: body.username || 'jay' },
+            user: { ...FIXTURE_USERS[0], fullName: body.fullName || FIXTURE_USERS[0].fullName, email: body.email || FIXTURE_USERS[0].email, username: body.username || FIXTURE_USERS[0].username },
           });
+        }
+
+        if (url.pathname === '/api/admin/users') {
+          if (req.method === 'GET') return send(res, 200, { users: FIXTURE_USERS });
+          if (req.method === 'PATCH') {
+            const target = FIXTURE_USERS.find((u) => u.id === body.userId);
+            if (!target) return send(res, 404, { error: 'User not found.' });
+            if (typeof body.disabled === 'boolean') target.disabled = body.disabled;
+            if (typeof body.isAdmin === 'boolean') target.isAdmin = body.isAdmin;
+            return send(res, 200, { user: target });
+          }
+          if (req.method === 'DELETE') {
+            const idx = FIXTURE_USERS.findIndex((u) => u.id === body.userId);
+            if (idx !== -1) FIXTURE_USERS.splice(idx, 1);
+            return send(res, 200, { ok: true });
+          }
         }
 
         if (url.pathname === '/api/logout') {

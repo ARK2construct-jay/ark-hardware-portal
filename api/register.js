@@ -59,6 +59,7 @@ export default async function handler(req, res) {
         fullName: user.fullName,
         email: user.email,
         username: user.username,
+        isAdmin: !!user.isAdmin,
       },
     });
   } catch (err) {
