@@ -2,6 +2,19 @@ import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar.jsx';
 import { api } from '../lib/api.js';
 import { humanizeField, formatCellValue } from '../lib/format.js';
+import {
+  TagIcon,
+  WrenchIcon,
+  PinIcon,
+  DoorIcon,
+  HingeIcon,
+  KeyIcon,
+  HardwareDescriptionIcon,
+} from '../components/icons.jsx';
+
+function isDescriptionColumn(col) {
+  return col.replace(/\s+/g, '').toLowerCase() === 'hardwaredescription';
+}
 
 // These fields are already represented by the 3 selectors above the results
 // table, so they're hidden from the result columns to avoid repeating the
@@ -18,9 +31,9 @@ const HIDDEN_RESULT_FIELDS = new Set([
 ]);
 
 const STEPS = [
-  { key: 'brand', label: 'Select Brand' },
-  { key: 'hardwareType', label: 'Select Hardware Type' },
-  { key: 'location', label: 'Select Location' },
+  { key: 'brand', label: 'Select Brand', Icon: TagIcon },
+  { key: 'hardwareType', label: 'Select Hardware Type', Icon: WrenchIcon },
+  { key: 'location', label: 'Select Location', Icon: PinIcon },
 ];
 
 export default function Dashboard() {
@@ -113,9 +126,12 @@ export default function Dashboard() {
       <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-ink tracking-tight">Hardware Selection</h1>
-          <p className="text-sm text-ink-secondary mt-1">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-7 mb-6">
+          <DoorIcon className="absolute -right-2 -top-4 h-32 w-32 text-white/10 rotate-6" strokeWidth={1} />
+          <HingeIcon className="absolute right-24 bottom-0 h-20 w-20 text-white/10 -rotate-12" strokeWidth={1} />
+          <KeyIcon className="absolute left-[45%] -bottom-6 h-16 w-16 text-white/10 rotate-12" strokeWidth={1} />
+          <h1 className="relative text-2xl font-semibold text-white tracking-tight">Hardware Selection</h1>
+          <p className="relative text-sm text-white/80 mt-1 max-w-md">
             Pick a brand, hardware type and door location to see the matching hardware set.
           </p>
         </div>
@@ -134,11 +150,11 @@ export default function Dashboard() {
               <div key={step.key} className={!isActive ? 'opacity-50 pointer-events-none' : ''}>
                 <div className="flex items-center gap-2 mb-2">
                   <span
-                    className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${
                       isDone ? 'bg-brand-500 text-white' : 'bg-page border border-hairline text-ink-muted'
                     }`}
                   >
-                    {i + 1}
+                    {isDone ? <step.Icon className="h-3.5 w-3.5" /> : i + 1}
                   </span>
                   <span className="text-sm font-medium text-ink">
                     Step {i + 1}: {step.label}
@@ -207,7 +223,16 @@ export default function Dashboard() {
                       <tr key={item._id} className="border-b border-hairline last:border-0 hover:bg-page/50 transition">
                         {columns.map((col) => (
                           <td key={col} className="px-4 py-3 text-ink whitespace-nowrap">
-                            {formatCellValue(item[col])}
+                            {isDescriptionColumn(col) ? (
+                              <span className="inline-flex items-center gap-2">
+                                <span className="h-6 w-6 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                                  <HardwareDescriptionIcon value={item[col]} />
+                                </span>
+                                {formatCellValue(item[col])}
+                              </span>
+                            ) : (
+                              formatCellValue(item[col])
+                            )}
                           </td>
                         ))}
                       </tr>

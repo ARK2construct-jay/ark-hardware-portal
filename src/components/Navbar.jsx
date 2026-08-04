@@ -21,9 +21,11 @@ export default function Navbar() {
     <header className="sticky top-0 z-10 bg-surface/90 backdrop-blur border-b border-hairline">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-xs">
-            AH
-          </div>
+          <img
+            src="/logo.png"
+            alt="ARK Simplify"
+            className="h-9 w-9 rounded-lg border border-hairline object-contain bg-white"
+          />
           <span className="font-semibold text-ink tracking-tight">ARK Hardware Portal</span>
         </div>
 
