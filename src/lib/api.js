@@ -27,6 +27,7 @@ export const api = {
     request('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (data) =>
     request('/reset-password', { method: 'POST', body: JSON.stringify(data) }),
-  hardwareMeta: () => request('/hardware/meta'),
-  hardwareList: (params) => request(`/hardware?${new URLSearchParams(params).toString()}`),
+  hardwareOptions: (dimension, filters = {}) =>
+    request(`/hardware/options?${new URLSearchParams({ dimension, ...filters }).toString()}`),
+  hardwareResults: (params) => request(`/hardware/results?${new URLSearchParams(params).toString()}`),
 };

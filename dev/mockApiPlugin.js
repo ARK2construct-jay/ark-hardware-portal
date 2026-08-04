@@ -1,28 +1,33 @@
 // DEV-ONLY visual QA helper. This plugin is never used in production — it
 // only activates when you run `MOCK_API=1 npm run dev`, and it never runs
 // during `vite build` (Vite plugins' `configureServer` hook is a dev-server
-// concept only). It fakes the /api responses with fixture data so the UI can
-// be reviewed end-to-end without a real MongoDB connection.
+// concept only). It fakes the /api responses with fixture data (shaped like
+// the real allegion_set schema) so the 3-step wizard UI can be reviewed
+// end-to-end without a real MongoDB connection.
 export function mockApiPlugin() {
   let loggedIn = false;
 
-  const fixtureFields = [
-    { name: 'category', type: 'select', options: ['Hinges', 'Locksets', 'Door Closers', 'Exit Devices'] },
-    { name: 'finish', type: 'select', options: ['US26D', 'US10B', 'US32D'] },
-    { name: 'manufacturer', type: 'select', options: ['Allegion', 'Schlage', 'Von Duprin'] },
-    { name: 'partNumber', type: 'text', options: null },
-    { name: 'description', type: 'text', options: null },
-  ];
+  const BRANDS = ['Allegion', 'Assa Abloy', 'Hager'];
+  const TYPES_BY_BRAND = {
+    Allegion: ['Allegion Economical Hardware', 'Allegion Residential Hardware', 'Allegion Standard Hardware'],
+    'Assa Abloy': ['Assa Abloy Economical Hardware', 'Assa Abloy Residential Hardware', 'Assa Abloy Standard Hardware'],
+    Hager: ['Hager Residential Hardware', 'Hager Standard Hardware'],
+  };
+  const LOCATIONS = ['Amenity (Exterior)', 'Building Entry (Exterior)', 'Unit Entry - ADA (Interior)'];
+  const DESCRIPTIONS = ['Hinge', 'Closer', 'Entry lock', 'Kickplate', 'Threshold', 'Weatherstrip'];
 
-  const fixtureItems = Array.from({ length: 12 }).map((_, i) => ({
-    _id: String(i),
-    partNumber: `AL-${1000 + i}`,
-    description: `Heavy-duty commercial hardware unit ${i + 1}`,
-    category: fixtureFields[0].options[i % fixtureFields[0].options.length],
-    finish: fixtureFields[1].options[i % fixtureFields[1].options.length],
-    manufacturer: fixtureFields[2].options[i % fixtureFields[2].options.length],
-    price: (20 + i * 3.5).toFixed(2),
-  }));
+  function fixtureResults(brand, hardwareType, location) {
+    return DESCRIPTIONS.map((desc, i) => ({
+      _id: `${brand}-${hardwareType}-${location}-${i}`,
+      brand,
+      hardwareType,
+      location,
+      'Hardware Description': desc,
+      Manufacture: ['Schlage', 'Von Duprin', 'LCN', 'Ives'][i % 4],
+      'Model Number': `MOD-${1000 + i}`,
+      'Grade 1': i % 2 === 0 ? 'Yes' : 'No',
+    }));
+  }
 
   function send(res, status, body) {
     res.statusCode = status;
@@ -36,7 +41,6 @@ export function mockApiPlugin() {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url.startsWith('/api/')) return next();
 
-        // Parse JSON body for POST requests.
         let body = {};
         if (req.method === 'POST') {
           const chunks = [];
@@ -79,12 +83,27 @@ export function mockApiPlugin() {
           return send(res, 200, { message: 'Password updated. You can now log in with your new password.' });
         }
 
-        if (url.pathname === '/api/hardware/meta') {
-          return send(res, 200, { fields: fixtureFields, totalCount: 348 });
+        if (url.pathname === '/api/hardware/options') {
+          const dimension = url.searchParams.get('dimension');
+          const brand = url.searchParams.get('brand');
+          const hardwareType = url.searchParams.get('hardwareType');
+
+          if (dimension === 'brand') return send(res, 200, { dimension, options: BRANDS });
+          if (dimension === 'hardwareType') {
+            return send(res, 200, { dimension, options: TYPES_BY_BRAND[brand] || [] });
+          }
+          if (dimension === 'location') {
+            return send(res, 200, { dimension, options: brand && hardwareType ? LOCATIONS : [] });
+          }
+          return send(res, 400, { error: 'invalid dimension' });
         }
 
-        if (url.pathname === '/api/hardware') {
-          return send(res, 200, { items: fixtureItems, total: fixtureItems.length, page: 1, limit: 25, totalPages: 1 });
+        if (url.pathname === '/api/hardware/results') {
+          const brand = url.searchParams.get('brand');
+          const hardwareType = url.searchParams.get('hardwareType');
+          const location = url.searchParams.get('location');
+          const items = fixtureResults(brand, hardwareType, location);
+          return send(res, 200, { items, total: items.length });
         }
 
         return next();
