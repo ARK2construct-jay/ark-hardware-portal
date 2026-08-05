@@ -125,7 +125,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-page">
       <Navbar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 px-6 py-7 mb-6">
           <DoorIcon className="absolute -right-2 -top-4 h-32 w-32 text-white/10 rotate-6" strokeWidth={1} />
           <HingeIcon className="absolute right-24 bottom-0 h-20 w-20 text-white/10 -rotate-12" strokeWidth={1} />
@@ -189,8 +189,8 @@ export default function Dashboard() {
         </div>
 
         {results && (
-          <div className="mt-6 bg-surface border border-hairline rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-hairline flex items-center justify-between">
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-ink">
                 {results.total} hardware item{results.total === 1 ? '' : 's'} found
               </h2>
@@ -200,18 +200,18 @@ export default function Dashboard() {
             </div>
 
             {results.items.length === 0 ? (
-              <div className="px-4 py-10 text-center text-ink-muted text-sm">
+              <div className="bg-surface border border-hairline rounded-xl px-4 py-10 text-center text-ink-muted text-sm">
                 No hardware found for this exact combination.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="bg-surface border border-hairline rounded-xl overflow-hidden">
+                <table className="w-full table-fixed text-xs sm:text-sm">
                   <thead>
                     <tr className="border-b border-hairline bg-page/60">
                       {columns.map((col) => (
                         <th
                           key={col}
-                          className="text-left font-medium text-ink-muted uppercase text-xs tracking-wide px-4 py-3 whitespace-nowrap"
+                          className="text-left font-medium text-ink-muted uppercase text-[10px] sm:text-xs tracking-wide px-2.5 sm:px-3 py-2.5 break-words"
                         >
                           {humanizeField(col)}
                         </th>
@@ -220,15 +220,15 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {results.items.map((item) => (
-                      <tr key={item._id} className="border-b border-hairline last:border-0 hover:bg-page/50 transition">
+                      <tr key={item._id} className="border-b border-hairline last:border-0 hover:bg-page/50 transition align-top">
                         {columns.map((col) => (
-                          <td key={col} className="px-4 py-3 text-ink whitespace-nowrap">
+                          <td key={col} className="px-2.5 sm:px-3 py-2.5 text-ink break-words">
                             {isDescriptionColumn(col) ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="h-6 w-6 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                                  <HardwareDescriptionIcon value={item[col]} />
+                              <span className="flex items-start gap-1.5">
+                                <span className="h-5 w-5 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 mt-0.5">
+                                  <HardwareDescriptionIcon value={item[col]} className="h-3.5 w-3.5" />
                                 </span>
-                                {formatCellValue(item[col])}
+                                <span>{formatCellValue(item[col])}</span>
                               </span>
                             ) : (
                               formatCellValue(item[col])

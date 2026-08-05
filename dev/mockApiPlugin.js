@@ -32,6 +32,8 @@ export function mockApiPlugin() {
       Manufacture: ['Schlage', 'Von Duprin', 'LCN', 'Ives'][i % 4],
       'Model Number': `MOD-${1000 + i}`,
       'Grade 1': i % 2 === 0 ? 'Yes' : 'No',
+      'Grade 2': i % 2 === 0 ? 'HM - FB31P or WD - FB41P' : 'W12',
+      'Economical grade': i % 3 === 0 ? 'Not applicable' : '25-M-L-NL',
     }));
   }
 
