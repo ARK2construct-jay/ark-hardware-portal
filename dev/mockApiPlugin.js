@@ -23,12 +23,19 @@ export function mockApiPlugin() {
   ];
 
   function fixtureResults(brand, hardwareType, location) {
+    // Intentionally mimics the real Mongo data quirk: the same logical
+    // column stored under two differently-cased/spaced raw keys (a
+    // spreadsheet-import artifact). Only one of the two is populated per
+    // row, the other is blank/undefined — this is what the Dashboard's
+    // column-merging logic needs to collapse into a single column.
     return DESCRIPTIONS.map((desc, i) => ({
       _id: `${brand}-${hardwareType}-${location}-${i}`,
       brand,
       hardwareType,
       location,
-      'Hardware Description': desc,
+      ...(i % 2 === 0
+        ? { 'Hardware Description': desc }
+        : { hardwareDescription: desc }),
       Manufacture: ['Schlage', 'Von Duprin', 'LCN', 'Ives'][i % 4],
       'Model Number': `MOD-${1000 + i}`,
       'Grade 1': i % 2 === 0 ? 'Yes' : 'No',

@@ -115,11 +115,36 @@ export default function Dashboard() {
     }
   };
 
-  const columns = results?.items?.length
-    ? [...new Set(results.items.flatMap((item) => Object.keys(item)))].filter(
-        (k) => !HIDDEN_RESULT_FIELDS.has(k)
-      )
-    : [];
+  // Real MongoDB rows sometimes have the same logical column stored under
+  // two different raw field names (different casing/spacing, e.g.
+  // "Hardware Description" and "hardwareDescription") — a leftover from the
+  // original spreadsheet import. Group raw keys by their humanized label so
+  // each logical column only shows up once, and merge whichever raw key
+  // actually has a value for a given row.
+  const columns = [];
+  if (results?.items?.length) {
+    const byLabel = new Map();
+    for (const item of results.items) {
+      for (const key of Object.keys(item)) {
+        if (HIDDEN_RESULT_FIELDS.has(key)) continue;
+        const label = humanizeField(key);
+        if (!byLabel.has(label)) {
+          byLabel.set(label, []);
+          columns.push({ label, rawKeys: byLabel.get(label) });
+        }
+        const rawKeys = byLabel.get(label);
+        if (!rawKeys.includes(key)) rawKeys.push(key);
+      }
+    }
+  }
+
+  function getMergedValue(item, rawKeys) {
+    for (const key of rawKeys) {
+      const value = item[key];
+      if (value !== null && value !== undefined && value !== '') return value;
+    }
+    return undefined;
+  }
 
   return (
     <div className="min-h-screen bg-page">
@@ -210,10 +235,10 @@ export default function Dashboard() {
                     <tr className="border-b border-hairline bg-page/60">
                       {columns.map((col) => (
                         <th
-                          key={col}
+                          key={col.label}
                           className="text-left font-medium text-ink-muted uppercase text-[10px] sm:text-xs tracking-wide px-2.5 sm:px-3 py-2.5 break-words"
                         >
-                          {humanizeField(col)}
+                          {col.label}
                         </th>
                       ))}
                     </tr>
@@ -221,20 +246,23 @@ export default function Dashboard() {
                   <tbody>
                     {results.items.map((item) => (
                       <tr key={item._id} className="border-b border-hairline last:border-0 hover:bg-page/50 transition align-top">
-                        {columns.map((col) => (
-                          <td key={col} className="px-2.5 sm:px-3 py-2.5 text-ink break-words">
-                            {isDescriptionColumn(col) ? (
-                              <span className="flex items-start gap-1.5">
-                                <span className="h-5 w-5 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 mt-0.5">
-                                  <HardwareDescriptionIcon value={item[col]} className="h-3.5 w-3.5" />
+                        {columns.map((col) => {
+                          const value = getMergedValue(item, col.rawKeys);
+                          return (
+                            <td key={col.label} className="px-2.5 sm:px-3 py-2.5 text-ink break-words">
+                              {isDescriptionColumn(col.label) ? (
+                                <span className="flex items-start gap-1.5">
+                                  <span className="h-5 w-5 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <HardwareDescriptionIcon value={value} className="h-3.5 w-3.5" />
+                                  </span>
+                                  <span>{formatCellValue(value)}</span>
                                 </span>
-                                <span>{formatCellValue(item[col])}</span>
-                              </span>
-                            ) : (
-                              formatCellValue(item[col])
-                            )}
-                          </td>
-                        ))}
+                              ) : (
+                                formatCellValue(value)
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
